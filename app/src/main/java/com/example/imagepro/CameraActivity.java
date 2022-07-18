@@ -22,11 +22,13 @@ import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
+import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.MatOfRect;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
+import org.opencv.features2d.MSER;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Moments;
 import org.opencv.objdetect.CascadeClassifier;
@@ -37,7 +39,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class CameraActivity extends Activity implements CameraBridgeViewBase.CvCameraViewListener2{
     private static final String TAG="MainActivity";
@@ -55,6 +59,7 @@ public class CameraActivity extends Activity implements CameraBridgeViewBase.CvC
                 case LoaderCallbackInterface
                         .SUCCESS:{
                     Log.i(TAG,"OpenCv Is loaded");
+                    mOpenCvCameraView.setCameraIndex(1);
                     mOpenCvCameraView.enableView();
                 }
                 default:
@@ -86,7 +91,7 @@ public class CameraActivity extends Activity implements CameraBridgeViewBase.CvC
 
         setContentView(R.layout.activity_camera);
 
-        mOpenCvCameraView=(CameraBridgeViewBase) findViewById(R.id.frame_Surface);
+        mOpenCvCameraView=findViewById(R.id.frame_Surface);
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
 
@@ -111,7 +116,7 @@ public class CameraActivity extends Activity implements CameraBridgeViewBase.CvC
 
             // load eye haarcascade classifier
             InputStream is2 =getResources().openRawResource(R.raw.haarcascade_eye);
-        // created before
+            // created before
             File mCascadeFile_eye =new File(cascadeDir,"haarcascade_eye.xml"); // creating file on that folder
             FileOutputStream os2=new FileOutputStream(mCascadeFile_eye);
             byte[] buffer1=new byte[4096];
@@ -180,9 +185,9 @@ public class CameraActivity extends Activity implements CameraBridgeViewBase.CvC
     }
 
     private Mat CascadeRec(Mat mRgba) {
-    // original frame is -90 degree so we have to rotate is to 90 to get proper face for detection
+        // original frame is -90 degree so we have to rotate is to 90 to get proper face for detection
 
-        Core.flip(mRgba.t(),mRgba,1);
+        Core.flip(mRgba.t(),mRgba,-1);
         // convert it into RGB
         Mat mRbg=new Mat();
         Imgproc.cvtColor(mRgba,mRbg,Imgproc.COLOR_RGBA2RGB);
@@ -200,10 +205,12 @@ public class CameraActivity extends Activity implements CameraBridgeViewBase.CvC
         // loop through all faces
         Rect[] facesArray=faces.toArray();
         for (int i=0;i<facesArray.length;i++){
+
+
             // draw face on original frame mRgba
             Imgproc.rectangle(mRgba,facesArray[i].tl(),facesArray[i].br(),new Scalar(0,255,0,255),2);
             // crop face image and then pass it through eye classifier
-                            // starting point
+            // starting point
             Rect roi=new Rect((int)facesArray[i].tl().x,(int)facesArray[i].tl().y, (int)facesArray[i].br().x-(int)facesArray[i].tl().x,(int)facesArray[i].br().y-(int)facesArray[i].tl().y);
 
             // cropped mat image
@@ -211,7 +218,7 @@ public class CameraActivity extends Activity implements CameraBridgeViewBase.CvC
             // create a array to store eyes coordinate but we have to pass MatOfRect to classifier
             MatOfRect eyes=new MatOfRect();
             if(cascadeClassifier_eye!=null){                                                      // find biggest size object
-                cascadeClassifier_eye.detectMultiScale(cropped,eyes,1.15,2,2,new Size(35,35),new Size());
+                cascadeClassifier_eye.detectMultiScale(cropped,eyes,1.15,2,2,new Size(100,100),new Size(120,120));
 
                 // now create an array
                 Rect[] eyesarray=eyes.toArray();
@@ -227,36 +234,47 @@ public class CameraActivity extends Activity implements CameraBridgeViewBase.CvC
                     // end point
                     int x2=(int)(w1+x1);
                     int y2=(int)(h1+y1);
-                    // draw eye on original frame mRgba
-                                    //input    starting point   ending point   color                 thickness
-                //    Imgproc.rectangle(mRgba,new Point(x1,y1),new Point(x2,y2),new Scalar(0,255,0,255),2);
 
-                    // Real-time pupil detection
-                    // go through my previous video to detect eye
+                    int vy1 = 35, vy2 = -40, vx1 = 20, vx2 = -20;
+                    // draw eye on original frame mRgba
+                    //input    starting point   ending point   color                 thickness
+                    Imgproc.rectangle(mRgba,new Point(x1+vx1,y1+vy1),new Point(x2+vx2,y2+vy2),new Scalar(0,255,0,255),2);
+
 
                     // crop eye from face
                     // to reduce cropped eye image
-                    //change variable to get better result
-                    Rect eye_roi=new Rect(x1+5,y1+22,w1-5,h1-10);
+                    Rect eye_roi=new Rect(x1+vx1,y1+vy1,w1-30,h1-50);
                     Mat eye_cropped=new Mat(mRgba,eye_roi);
                     // convert it to gray scale
                     Mat grayscale_eye_image=new Mat();
                     Imgproc.cvtColor(eye_cropped,grayscale_eye_image,Imgproc.COLOR_RGBA2GRAY);
                     // blur image to get better result
-                    Imgproc.blur(grayscale_eye_image,grayscale_eye_image,new Size(5,5));
-                    // apply threshold layer to convert it into inverse binary image
-                    Imgproc.threshold(grayscale_eye_image,grayscale_eye_image,140,255,Imgproc.THRESH_BINARY_INV);
+
+                    //Imgproc.blur(grayscale_eye_image,grayscale_eye_image,new Size(5,5));
+                    Imgproc.GaussianBlur(grayscale_eye_image,grayscale_eye_image,new Size(5,5),5,5);
+                    //Imgproc.medianBlur(grayscale_eye_image,grayscale_eye_image,7);
+
+                    Imgproc.threshold(grayscale_eye_image,grayscale_eye_image,50,255,Imgproc.THRESH_BINARY_INV);
+                    int k = 7;
+                    Mat kernel = Mat.ones(k,k, CvType.CV_32F);
+                    Imgproc.erode(grayscale_eye_image,grayscale_eye_image,kernel);
+                    Imgproc.morphologyEx(grayscale_eye_image,grayscale_eye_image,Imgproc.MORPH_OPEN,kernel);
+
+                    findAndDrawCountours(eye_cropped, grayscale_eye_image, j);
 
                     // add this to original cropped eye image
                     Imgproc.cvtColor(grayscale_eye_image,grayscale_eye_image,Imgproc.COLOR_GRAY2RGBA);
-                            // input              input      output
-                    Core.add(grayscale_eye_image,eye_cropped,eye_cropped);
+                    // input              input      output
+                    //Core.add(grayscale_eye_image,eye_cropped,eye_cropped);
                     // replace eye image onto main frame
+
+                    Core.addWeighted(eye_cropped, 1.0, grayscale_eye_image, 0.5, 0.0, eye_cropped);
 
                     eye_cropped.copyTo(new Mat(mRgba,eye_roi));
 
                 }
             }
+
 
 
         }
@@ -267,4 +285,31 @@ public class CameraActivity extends Activity implements CameraBridgeViewBase.CvC
 
     }
 
+    private static void findAndDrawCountours(Mat image, Mat proc, int j) {
+        List<MatOfPoint> contours = new ArrayList<>(), circles = new ArrayList<>();
+        Mat hierarchy = new Mat();
+        String eye[] = {"eye1: ", "eye2: "};
+        // find contours
+        Imgproc.findContours(proc, contours, hierarchy, Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
+        // if any contour exist...
+
+//        for(MatOfPoint c : contours) {
+//            Moments M = Imgproc.moments(c);
+//            final Point centroid = new Point();
+//            centroid.x = M.get_m10() / M.get_m00();
+//            centroid.y = M.get_m01() / M.get_m00();
+//
+//            Imgproc.circle(image, centroid, 1, new Scalar(138, 150, 98),1);
+//        }
+        Moments M = Imgproc.moments(contours.get(0));
+        final Point centroid = new Point();
+        centroid.x = M.get_m10() / M.get_m00();
+        centroid.y = M.get_m01() / M.get_m00();
+
+        Imgproc.circle(image, centroid, 1, new Scalar(138, 150, 98),1);
+        Log.d("Centroid", eye[j] + centroid + "\n");
+
+        Imgproc.drawContours(image, contours, 0, new Scalar(250, 0, 0), 2);
+    }
 }
+
