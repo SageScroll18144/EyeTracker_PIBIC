@@ -1,13 +1,132 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/frlay"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    android:layout_height="match_parent">
 
     <org.opencv.android.JavaCameraView
+        android:id="@+id/frame_Surface"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/frame_Surface"
-        app:show_fps="true"/>
+        android:layout_gravity="center"
+        app:show_fps="true" />
+
+    <VideoView
+        android:id="@+id/videoView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <SeekBar
+        android:id="@+id/seekBar2"
+        android:layout_width="177dp"
+        android:layout_height="90dp"
+        android:layout_marginLeft="100dp"
+        android:layout_marginTop="300dp"
+        android:min="30"
+        android:max="125"
+        android:progress="1"
+
+        android:scaleX="2"
+        android:scaleY="2"
+
+        android:visibility="gone"/>
+
+    <Button
+        android:id="@+id/startTstBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right"
+        android:layout_marginTop="350dp"
+        android:onClick="startTest"
+        android:text="Start" />
+
+    <TextView
+        android:id="@+id/contagem"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="30dp"
+        android:scaleX="5"
+        android:scaleY="5" />
+
+    <Button
+        android:id="@+id/gravarPos"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Gravar"
+        android:layout_gravity="right"
+        android:layout_marginTop="350dp"
+        android:enabled="false"
+        android:visibility="invisible"/>
+
+    <SeekBar
+        android:id="@+id/blockSize"
+        style="@style/Widget.AppCompat.SeekBar.Discrete"
+        android:layout_width="150dp"
+        android:layout_height="30dp"
+
+        android:layout_gravity="right"
+
+        android:min="3"
+        android:max="51"
+        android:progress="3"
+
+        android:layout_marginTop="50dp"
+        android:rotation="270"
+        tools:targetApi="o"
+
+        android:visibility="gone"/>
+
+    <SeekBar
+        android:id="@+id/C"
+        style="@style/Widget.AppCompat.SeekBar.Discrete"
+        android:layout_width="150dp"
+        android:layout_height="30dp"
+
+        android:layout_gravity="right"
+
+        android:layout_marginTop="200dp"
+
+        android:min="2"
+        android:max="20"
+        android:progress="1"
+
+        android:rotation="270"
+        tools:targetApi="o"
+
+        android:visibility="gone"/>
+
+    <TextView
+        android:id="@+id/bSVAl"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        />
+
+    <TextView
+        android:id="@+id/CTXT"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50dp"
+        />
+
+    <Button
+        android:id="@+id/changeMode"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="contour"
+
+        android:layout_gravity="end"/>
+
+    <TextView
+        android:id="@+id/confirmacao"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+
+        android:layout_gravity="center_horizontal"
+        android:scaleX="2"
+        android:scaleY="2"/>
+
 
 </FrameLayout>
